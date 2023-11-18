@@ -10,18 +10,12 @@ const char* vertexShaderSource = "#version 330 core\n"
 	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 	"}\0";
 
-const char* fragmentOrangeShaderSource = "#version 330 core\n"
+const char* fragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
+	"uniform vec4 ourColor;\n"
 	"void main()\n"
 	"{\n"
-	"    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	"}\0";
-
-const char* fragmentYellowShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"void main()\n"
-	"{\n"
-	"    FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+	"    FragColor = ourColor;\n"
 	"}\0";
 
 int main() {
@@ -68,9 +62,8 @@ int main() {
 	// compile fragment shaders
 	unsigned int fragmentShader[2];
 
-	// yellow
 	fragmentShader[0] = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader[0], 1, &fragmentYellowShaderSource, NULL);
+	glShaderSource(fragmentShader[0], 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader[0]);
 
 	glGetShaderiv(fragmentShader[0], GL_COMPILE_STATUS, &success);
@@ -80,20 +73,8 @@ int main() {
 		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
-	// orange
-	fragmentShader[1] = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader[1], 1, &fragmentOrangeShaderSource, NULL);
-	glCompileShader(fragmentShader[1]);
-
-	glGetShaderiv(fragmentShader[1], GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader[1], 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
 	// create shader program
-	unsigned int shaderProgram[2];
+	unsigned int shaderProgram[1];
 
 	// yellow program
 	shaderProgram[0] = glCreateProgram();
@@ -107,50 +88,23 @@ int main() {
 		glGetProgramInfoLog(shaderProgram[0], 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
-
-	// orange program
-	shaderProgram[1] = glCreateProgram();
-	glAttachShader(shaderProgram[1], vertexShader);
-	glAttachShader(shaderProgram[1], fragmentShader[1]);
-	glLinkProgram(shaderProgram[1]);
-
-	glGetProgramiv(shaderProgram[1], GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(shaderProgram[1], 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-
 	// clean up
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader[0]);
-	glDeleteShader(fragmentShader[1]);
 
-	float vertices1[] = {
-		-0.5f,  0.5f, 0.0f,
-		-1.0f, -0.5f, 0.0f,
-		 0.0f, -0.5f, 0.0f
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f,  0.5f, 0.0f
 	};
 
-	float vertices2[] = {
-		 0.5f,  0.5f, 0.0f,
-		 0.0f, -0.5f, 0.0f,
-		 1.0f, -0.5f, 0.0f
-	};
-
-	unsigned int VAO[2], VBO[2];
-	glGenVertexArrays(2, &VAO[0]);
-	glGenBuffers(2, &VBO[0]);
+	unsigned int VAO[1], VBO[1];
+	glGenVertexArrays(1, &VAO[0]);
+	glGenBuffers(1, &VBO[0]);
 	
 	glBindVertexArray(VAO[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindVertexArray(VAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -164,12 +118,13 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		float timeValue = glfwGetTime();
+		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+		int vertexColorLocation = glGetUniformLocation(shaderProgram[0], "ourColor");
+		
 		glUseProgram(shaderProgram[0]);
+		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 		glBindVertexArray(VAO[0]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		glUseProgram(shaderProgram[1]);
-		glBindVertexArray(VAO[1]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// check and call events and swap the buffers
