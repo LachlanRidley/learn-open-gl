@@ -31,9 +31,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader.vs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shader.fsh" />
+    <None Include="shader.frag" />
+    <None Include="shader.vert" />
   </ItemGroup>
 </Project>
